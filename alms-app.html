@@ -1,0 +1,1747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>A-LMS — Interactive Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --ink:#0e0e10;--paper:#f5f2eb;--accent:#c8401e;--accent2:#1e5fc8;
+  --muted:#7a7672;--rule:rgba(14,14,16,0.12);--card:#ffffff;
+  --success:#2e7d32;--warn:#e65100;--info:#1565c0;
+  --sidebar:220px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Mono',monospace;background:var(--paper);color:var(--ink);font-size:14px;line-height:1.6;overflow-x:hidden}
+button{cursor:pointer;font-family:'DM Mono',monospace}
+input,textarea,select{font-family:'DM Mono',monospace}
+
+/* ── SCREENS ── */
+.screen{display:none;width:100%;min-height:100vh}
+.screen.active{display:block}
+
+/* ══════════════════════════════════
+   LOGIN / REGISTER SCREEN
+══════════════════════════════════ */
+#screen-auth{
+  display:none;min-height:100vh;
+  background:var(--ink);
+  align-items:center;justify-content:center;
+  flex-direction:column;gap:0;
+}
+#screen-auth.active{display:flex}
+
+.auth-split{display:grid;grid-template-columns:1fr 1fr;min-height:100vh;width:100%}
+.auth-left{
+  background:var(--ink);
+  padding:3rem;display:flex;flex-direction:column;justify-content:center;
+  position:relative;overflow:hidden;
+}
+.auth-left::before{
+  content:'';position:absolute;top:-20%;left:-10%;
+  width:70%;height:70%;
+  background:radial-gradient(ellipse,rgba(200,64,30,0.15) 0%,transparent 70%);
+  pointer-events:none;
+}
+.auth-brand{
+  font-family:'Syne',sans-serif;font-weight:800;font-size:3.5rem;
+  letter-spacing:-0.04em;color:var(--paper);line-height:1;margin-bottom:1.5rem;
+}
+.auth-brand span{color:var(--accent)}
+.auth-tagline{color:rgba(245,242,235,0.55);font-size:0.88rem;max-width:320px;margin-bottom:3rem}
+.cred-box{
+  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
+  border-radius:8px;padding:1.5rem;margin-bottom:1rem;
+}
+.cred-box-title{font-family:'Syne',sans-serif;font-weight:700;font-size:0.7rem;
+  letter-spacing:0.1em;text-transform:uppercase;color:rgba(245,242,235,0.4);margin-bottom:0.8rem}
+.cred-row{display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:0.4rem;color:rgba(245,242,235,0.75)}
+.cred-val{color:var(--accent);font-weight:400}
+.cred-use-btn{
+  margin-top:0.8rem;width:100%;padding:0.5rem;
+  background:rgba(200,64,30,0.15);border:1px solid rgba(200,64,30,0.3);
+  color:var(--accent);font-family:'Syne',sans-serif;font-weight:700;
+  font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;border-radius:4px;
+  transition:background 0.2s;
+}
+.cred-use-btn:hover{background:rgba(200,64,30,0.25)}
+
+.auth-right{
+  background:var(--paper);
+  padding:3rem;display:flex;flex-direction:column;justify-content:center;
+}
+.auth-tabs{display:flex;gap:0;margin-bottom:2rem;border-bottom:1px solid var(--rule)}
+.auth-tab{
+  font-family:'Syne',sans-serif;font-weight:700;font-size:0.78rem;
+  letter-spacing:0.06em;text-transform:uppercase;
+  padding:0.7rem 1.5rem;background:none;border:none;color:var(--muted);
+  border-bottom:2px solid transparent;margin-bottom:-1px;transition:color 0.2s,border-color 0.2s;
+}
+.auth-tab.active{color:var(--ink);border-bottom-color:var(--accent)}
+.auth-form{display:none;flex-direction:column;gap:1rem;max-width:380px}
+.auth-form.active{display:flex}
+.form-group{display:flex;flex-direction:column;gap:0.4rem}
+label.field-label{font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)}
+input[type=text],input[type=email],input[type=password],select,textarea{
+  padding:0.75rem 1rem;border:1px solid var(--rule);border-radius:4px;
+  background:var(--card);color:var(--ink);font-size:0.85rem;
+  outline:none;transition:border-color 0.2s;width:100%;
+}
+input:focus,select:focus,textarea:focus{border-color:var(--ink)}
+.btn-submit{
+  padding:0.85rem;background:var(--ink);color:var(--paper);border:none;border-radius:4px;
+  font-family:'Syne',sans-serif;font-weight:700;font-size:0.82rem;
+  letter-spacing:0.06em;text-transform:uppercase;
+  transition:background 0.2s,transform 0.15s;margin-top:0.5rem;
+}
+.btn-submit:hover{background:var(--accent);transform:translateY(-1px)}
+.auth-err{color:var(--accent);font-size:0.78rem;padding:0.5rem 0.8rem;background:rgba(200,64,30,0.08);border-radius:4px;display:none}
+.auth-err.show{display:block}
+.auth-form-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.6rem;letter-spacing:-0.03em;margin-bottom:0.4rem}
+.auth-form-sub{font-size:0.8rem;color:var(--muted);margin-bottom:0.5rem}
+
+/* ══════════════════════════════════
+   APP SHELL
+══════════════════════════════════ */
+#screen-app{display:none;flex-direction:row;min-height:100vh}
+#screen-app.active{display:flex}
+
+/* sidebar */
+.sidebar{
+  width:var(--sidebar);flex-shrink:0;background:var(--ink);
+  display:flex;flex-direction:column;min-height:100vh;
+  position:sticky;top:0;height:100vh;overflow-y:auto;
+}
+.sidebar-brand{
+  padding:1.5rem 1.2rem;border-bottom:1px solid rgba(255,255,255,0.07);
+  font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;
+  letter-spacing:-0.03em;color:var(--paper);
+}
+.sidebar-brand span{color:var(--accent)}
+.sidebar-user{
+  padding:1rem 1.2rem;border-bottom:1px solid rgba(255,255,255,0.07);
+}
+.sidebar-user-name{font-family:'Syne',sans-serif;font-weight:700;font-size:0.82rem;color:var(--paper)}
+.sidebar-user-role{
+  font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;
+  padding:0.15rem 0.5rem;border-radius:20px;display:inline-block;margin-top:0.25rem;
+}
+.role-teacher{background:rgba(200,64,30,0.2);color:#ff7a5a}
+.role-student{background:rgba(30,95,200,0.2);color:#7aadff}
+.sidebar-nav{padding:1rem 0;flex:1}
+.nav-item{
+  display:flex;align-items:center;gap:0.75rem;
+  padding:0.7rem 1.2rem;color:rgba(245,242,235,0.5);
+  cursor:pointer;transition:color 0.2s,background 0.2s;
+  font-size:0.8rem;border-left:2px solid transparent;
+}
+.nav-item:hover{color:var(--paper);background:rgba(255,255,255,0.04)}
+.nav-item.active{color:var(--paper);background:rgba(255,255,255,0.06);border-left-color:var(--accent)}
+.nav-item-icon{width:18px;text-align:center;font-size:0.95rem}
+.sidebar-bottom{
+  padding:1rem 1.2rem;border-top:1px solid rgba(255,255,255,0.07);
+}
+.btn-logout{
+  width:100%;padding:0.6rem;background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.1);color:rgba(245,242,235,0.6);
+  border-radius:4px;font-family:'Syne',sans-serif;font-weight:600;
+  font-size:0.72rem;letter-spacing:0.06em;text-transform:uppercase;
+  transition:background 0.2s,color 0.2s;
+}
+.btn-logout:hover{background:rgba(200,64,30,0.2);color:#ff7a5a;border-color:rgba(200,64,30,0.3)}
+
+/* main content */
+.main-content{flex:1;overflow-y:auto;padding:2.5rem;background:var(--paper)}
+.page{display:none}
+.page.active{display:block}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:2rem;gap:1rem;flex-wrap:wrap}
+.page-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;letter-spacing:-0.03em}
+.page-sub{font-size:0.8rem;color:var(--muted);margin-top:0.3rem}
+
+/* ── COMMON COMPONENTS ── */
+.btn{
+  display:inline-flex;align-items:center;gap:0.5rem;
+  padding:0.65rem 1.3rem;border-radius:4px;border:none;
+  font-family:'Syne',sans-serif;font-weight:700;font-size:0.75rem;
+  letter-spacing:0.06em;text-transform:uppercase;transition:all 0.2s;cursor:pointer;
+}
+.btn-primary{background:var(--ink);color:var(--paper)}
+.btn-primary:hover{background:var(--accent);transform:translateY(-1px)}
+.btn-secondary{background:var(--card);color:var(--ink);border:1px solid var(--rule)}
+.btn-secondary:hover{border-color:var(--ink)}
+.btn-danger{background:rgba(200,64,30,0.1);color:var(--accent);border:1px solid rgba(200,64,30,0.2)}
+.btn-danger:hover{background:rgba(200,64,30,0.2)}
+.btn-success{background:rgba(46,125,50,0.1);color:var(--success);border:1px solid rgba(46,125,50,0.2)}
+.btn-success:hover{background:rgba(46,125,50,0.2)}
+.btn-sm{padding:0.4rem 0.9rem;font-size:0.68rem}
+
+.card{background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:1.5rem}
+.card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:0.3rem}
+.card-sub{font-size:0.78rem;color:var(--muted)}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem}
+
+.badge{
+  display:inline-block;font-size:0.65rem;letter-spacing:0.06em;text-transform:uppercase;
+  padding:0.2rem 0.6rem;border-radius:20px;font-family:'Syne',sans-serif;font-weight:700;
+}
+.badge-green{background:#e8f5e9;color:#2e7d32}
+.badge-blue{background:#e3f2fd;color:#1565c0}
+.badge-orange{background:#fff3e0;color:#e65100}
+.badge-red{background:#ffebee;color:#c62828}
+.badge-gray{background:#f5f5f5;color:#616161}
+.badge-ink{background:var(--ink);color:var(--paper)}
+
+.pill{
+  display:inline-block;font-size:0.65rem;letter-spacing:0.06em;text-transform:uppercase;
+  padding:0.18rem 0.6rem;border-radius:3px;font-family:'Syne',sans-serif;font-weight:700;
+}
+.pill-quiz{background:rgba(30,95,200,0.1);color:var(--accent2)}
+.pill-essay{background:rgba(200,64,30,0.1);color:var(--accent)}
+.pill-assignment{background:rgba(46,125,50,0.1);color:var(--success)}
+.pill-case_study{background:rgba(123,31,162,0.1);color:#7b1fa2}
+
+.divider{border:none;border-top:1px solid var(--rule);margin:1.5rem 0}
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--muted);font-size:0.85rem}
+.empty-state-icon{font-size:2.5rem;margin-bottom:0.8rem;display:block}
+
+.toast{
+  position:fixed;bottom:2rem;right:2rem;z-index:9999;
+  background:var(--ink);color:var(--paper);padding:0.9rem 1.5rem;
+  border-radius:6px;font-size:0.82rem;
+  box-shadow:0 8px 24px rgba(0,0,0,0.2);
+  animation:slideUp 0.3s ease;display:none;
+  font-family:'Syne',sans-serif;font-weight:600;
+  max-width:320px;
+}
+.toast.show{display:block}
+.toast.success{background:var(--success)}
+.toast.error{background:#c62828}
+@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* Modal */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(14,14,16,0.6);z-index:500;
+  display:none;align-items:center;justify-content:center;padding:1.5rem;
+  backdrop-filter:blur(4px);
+}
+.modal-overlay.show{display:flex}
+.modal{
+  background:var(--card);border-radius:10px;width:100%;max-width:600px;
+  max-height:90vh;overflow-y:auto;
+  box-shadow:0 24px 64px rgba(0,0,0,0.2);
+  animation:fadeUp 0.25s ease;
+}
+.modal-header{
+  padding:1.5rem 1.5rem 1rem;border-bottom:1px solid var(--rule);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.modal-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;letter-spacing:-0.02em}
+.modal-close{
+  background:none;border:none;font-size:1.3rem;color:var(--muted);cursor:pointer;
+  width:32px;height:32px;display:grid;place-items:center;border-radius:4px;
+  transition:background 0.2s;
+}
+.modal-close:hover{background:var(--paper)}
+.modal-body{padding:1.5rem}
+.modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--rule);display:flex;gap:0.8rem;justify-content:flex-end}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+/* Stat cards */
+.stat-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem}
+.stat-card{
+  background:var(--card);border:1px solid var(--rule);border-radius:8px;
+  padding:1.2rem;text-align:center;
+}
+.stat-card-num{
+  font-family:'Syne',sans-serif;font-weight:800;font-size:2rem;
+  letter-spacing:-0.04em;line-height:1;margin-bottom:0.3rem;
+}
+.stat-card-lbl{font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)}
+
+/* Table */
+.data-table{width:100%;border-collapse:collapse;font-size:0.82rem}
+.data-table th{
+  text-align:left;padding:0.6rem 0.8rem;
+  font-family:'Syne',sans-serif;font-weight:700;font-size:0.68rem;
+  letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);
+  border-bottom:1px solid var(--rule);
+}
+.data-table td{padding:0.75rem 0.8rem;border-bottom:1px solid var(--rule);vertical-align:middle}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:rgba(14,14,16,0.02)}
+
+/* Invite code */
+.invite-code{
+  font-family:'Syne',sans-serif;font-weight:800;font-size:1.4rem;
+  letter-spacing:0.15em;color:var(--accent);
+  background:rgba(200,64,30,0.08);border:1px solid rgba(200,64,30,0.2);
+  border-radius:6px;padding:0.6rem 1.2rem;display:inline-block;
+}
+
+/* Progress bar */
+.progress-bar{height:6px;background:var(--rule);border-radius:3px;overflow:hidden;margin-top:0.4rem}
+.progress-fill{height:100%;border-radius:3px;background:var(--accent);transition:width 0.4s ease}
+
+/* AI Typing animation */
+.typing-dots{display:inline-flex;gap:4px;align-items:center}
+.typing-dot{
+  width:6px;height:6px;border-radius:50%;background:var(--accent);
+  animation:bounce 1.2s ease infinite;
+}
+.typing-dot:nth-child(2){animation-delay:0.2s}
+.typing-dot:nth-child(3){animation-delay:0.4s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+
+/* Agent pipeline */
+.agent-pipeline{display:flex;flex-direction:column;gap:0.7rem;margin:1rem 0}
+.agent-step{
+  display:flex;align-items:center;gap:0.8rem;
+  padding:0.8rem 1rem;border-radius:6px;
+  border:1px solid var(--rule);background:var(--paper);
+  font-size:0.8rem;transition:all 0.3s;
+}
+.agent-step.running{background:rgba(30,95,200,0.06);border-color:rgba(30,95,200,0.2)}
+.agent-step.done{background:rgba(46,125,50,0.06);border-color:rgba(46,125,50,0.2)}
+.agent-step.waiting{opacity:0.5}
+.agent-step-icon{font-size:1.1rem;flex-shrink:0}
+.agent-step-info{flex:1}
+.agent-step-name{font-family:'Syne',sans-serif;font-weight:700;font-size:0.78rem}
+.agent-step-status{font-size:0.7rem;color:var(--muted)}
+
+/* Rubric criteria */
+.rubric-criteria-list{display:flex;flex-direction:column;gap:0.6rem;margin-top:0.8rem}
+.rubric-criterion-item{
+  display:flex;align-items:center;gap:0.8rem;
+  padding:0.7rem;background:var(--paper);border-radius:5px;border:1px solid var(--rule);
+}
+.rubric-criterion-item input[type=text]{flex:1;border:none;background:transparent;font-size:0.82rem;padding:0}
+.rubric-criterion-item input[type=number]{width:70px;border:none;background:var(--card);font-size:0.82rem;padding:0.3rem 0.5rem;border-radius:3px;border:1px solid var(--rule)}
+.rubric-del-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:0.2rem;transition:color 0.2s}
+.rubric-del-btn:hover{color:var(--accent)}
+
+/* Quiz question builder */
+.question-block{
+  background:var(--paper);border:1px solid var(--rule);border-radius:8px;
+  padding:1.2rem;margin-bottom:1rem;
+}
+.question-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.8rem}
+.option-row{display:flex;align-items:center;gap:0.6rem;margin-bottom:0.5rem}
+.option-row input[type=text]{flex:1}
+.option-row input[type=radio]{flex-shrink:0}
+
+/* Feedback display */
+.feedback-table{width:100%;border-collapse:collapse;margin-top:1rem;font-size:0.82rem}
+.feedback-table th{background:var(--ink);color:var(--paper);padding:0.6rem 0.8rem;text-align:left;font-family:'Syne',sans-serif;font-weight:700;font-size:0.7rem;letter-spacing:0.06em;text-transform:uppercase}
+.feedback-table td{padding:0.75rem 0.8rem;border-bottom:1px solid var(--rule);vertical-align:top}
+.score-chip{
+  display:inline-block;font-family:'Syne',sans-serif;font-weight:800;
+  font-size:0.85rem;background:rgba(200,64,30,0.1);color:var(--accent);
+  padding:0.2rem 0.7rem;border-radius:3px;
+}
+
+/* Score circle */
+.score-circle{
+  width:80px;height:80px;border-radius:50%;
+  background:conic-gradient(var(--accent) calc(var(--pct)*1%),var(--rule) 0);
+  display:flex;align-items:center;justify-content:center;position:relative;
+}
+.score-circle::before{
+  content:'';position:absolute;inset:8px;border-radius:50%;background:var(--card);
+}
+.score-circle-num{
+  position:relative;z-index:1;font-family:'Syne',sans-serif;font-weight:800;
+  font-size:0.95rem;
+}
+
+/* notification dot */
+.notif-dot{
+  width:7px;height:7px;border-radius:50%;background:var(--accent);
+  display:inline-block;margin-left:auto;
+}
+
+/* classroom card */
+.classroom-card{
+  background:var(--card);border:1px solid var(--rule);border-radius:8px;
+  padding:1.5rem;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;
+  position:relative;overflow:hidden;
+}
+.classroom-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(to right,var(--accent),var(--accent2));
+}
+.classroom-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.08)}
+
+/* section headers */
+.section-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:1.2rem;
+}
+.section-label{
+  font-family:'Syne',sans-serif;font-weight:700;font-size:0.78rem;
+  letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);
+}
+
+@media(max-width:768px){
+  .auth-split{grid-template-columns:1fr}
+  .auth-left{display:none}
+  .stat-cards{grid-template-columns:1fr 1fr}
+  .grid-2,.grid-3{grid-template-columns:1fr}
+  .sidebar{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ AUTH SCREEN ══ -->
+<div id="screen-auth" class="screen active">
+  <div class="auth-split">
+    <!-- Left: branding + credentials -->
+    <div class="auth-left">
+      <div class="auth-brand"><span>A</span>-LMS</div>
+      <div class="auth-tagline">An AI-powered learning management system with 5 agentic graders, personalized learning paths, and human-in-the-loop review.</div>
+
+      <div class="cred-box">
+        <div class="cred-box-title">👩‍🏫 Teacher Credentials</div>
+        <div class="cred-row"><span>Email</span><span class="cred-val">teacher@alms.dev</span></div>
+        <div class="cred-row"><span>Password</span><span class="cred-val">teach123</span></div>
+        <div class="cred-row"><span>Role</span><span class="cred-val">Teacher</span></div>
+        <button class="cred-use-btn" onclick="fillCreds('teacher@alms.dev','teach123','teacher')">→ Use Teacher Credentials</button>
+      </div>
+
+      <div class="cred-box">
+        <div class="cred-box-title">🎓 Student Credentials</div>
+        <div class="cred-row"><span>Email</span><span class="cred-val">student@alms.dev</span></div>
+        <div class="cred-row"><span>Password</span><span class="cred-val">study123</span></div>
+        <div class="cred-row"><span>Enroll #</span><span class="cred-val">STU001</span></div>
+        <button class="cred-use-btn" onclick="fillCreds('student@alms.dev','study123','student')">→ Use Student Credentials</button>
+      </div>
+
+      <div class="cred-box" style="margin-top:0.5rem">
+        <div class="cred-box-title">🎓 Student 2 Credentials</div>
+        <div class="cred-row"><span>Email</span><span class="cred-val">student2@alms.dev</span></div>
+        <div class="cred-row"><span>Password</span><span class="cred-val">study456</span></div>
+        <div class="cred-row"><span>Enroll #</span><span class="cred-val">STU002</span></div>
+        <button class="cred-use-btn" onclick="fillCreds('student2@alms.dev','study456','student')">→ Use Student 2 Credentials</button>
+      </div>
+    </div>
+
+    <!-- Right: form -->
+    <div class="auth-right">
+      <div style="max-width:400px;width:100%">
+        <div class="auth-tabs">
+          <button class="auth-tab active" onclick="switchAuthTab('login')">Login</button>
+          <button class="auth-tab" onclick="switchAuthTab('register')">Register</button>
+        </div>
+
+        <!-- LOGIN FORM -->
+        <form class="auth-form active" id="form-login" onsubmit="handleLogin(event)">
+          <div class="auth-form-title">Welcome back</div>
+          <div class="auth-form-sub">Sign in to your A-LMS account</div>
+          <div class="auth-err" id="login-err"></div>
+          <div class="form-group">
+            <label class="field-label">Email or Enrollment #</label>
+            <input type="text" id="login-id" placeholder="email@example.com" required/>
+          </div>
+          <div class="form-group">
+            <label class="field-label">Password</label>
+            <input type="password" id="login-pass" placeholder="••••••••" required/>
+          </div>
+          <div class="form-group">
+            <label class="field-label">Login as</label>
+            <select id="login-role">
+              <option value="student">Student</option>
+              <option value="teacher">Teacher</option>
+            </select>
+          </div>
+          <button type="submit" class="btn-submit">Login →</button>
+        </form>
+
+        <!-- REGISTER FORM -->
+        <form class="auth-form" id="form-register" onsubmit="handleRegister(event)">
+          <div class="auth-form-title">Create account</div>
+          <div class="auth-form-sub">Register as a teacher or student</div>
+          <div class="auth-err" id="reg-err"></div>
+          <div class="form-group">
+            <label class="field-label">Email</label>
+            <input type="email" id="reg-email" placeholder="you@example.com" required/>
+          </div>
+          <div class="form-group">
+            <label class="field-label">Password</label>
+            <input type="password" id="reg-pass" placeholder="••••••••" required/>
+          </div>
+          <div class="form-group">
+            <label class="field-label">Role</label>
+            <select id="reg-role" onchange="toggleEnrollField()">
+              <option value="student">Student</option>
+              <option value="teacher">Teacher</option>
+            </select>
+          </div>
+          <div class="form-group" id="enroll-group">
+            <label class="field-label">Enrollment Number</label>
+            <input type="text" id="reg-enroll" placeholder="e.g. STU003"/>
+          </div>
+          <button type="submit" class="btn-submit">Register →</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ APP SCREEN ══ -->
+<div id="screen-app" class="screen">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand"><span>A</span>-LMS</div>
+    <div class="sidebar-user">
+      <div class="sidebar-user-name" id="sidebar-name">—</div>
+      <span class="sidebar-user-role" id="sidebar-role-badge">—</span>
+    </div>
+    <nav class="sidebar-nav" id="sidebar-nav"></nav>
+    <div class="sidebar-bottom">
+      <button class="btn-logout" onclick="logout()">⬡ Logout</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content" id="main-content">
+
+    <!-- ─── DASHBOARD PAGE ─── -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div>
+          <div class="page-title" id="dash-title">Dashboard</div>
+          <div class="page-sub" id="dash-sub">Overview of your activity</div>
+        </div>
+        <div id="dash-actions"></div>
+      </div>
+      <div class="stat-cards" id="dash-stats"></div>
+      <div id="dash-content"></div>
+    </div>
+
+    <!-- ─── CLASSROOMS PAGE ─── -->
+    <div class="page" id="page-classrooms">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Classrooms</div>
+          <div class="page-sub" id="classrooms-sub">Your classrooms</div>
+        </div>
+        <div id="classrooms-actions"></div>
+      </div>
+      <div id="classrooms-content"></div>
+    </div>
+
+    <!-- ─── CLASSROOM DETAIL PAGE ─── -->
+    <div class="page" id="page-classroom-detail">
+      <div class="page-header">
+        <div style="display:flex;align-items:center;gap:0.8rem">
+          <button class="btn btn-secondary btn-sm" onclick="navigateTo('classrooms')">← Back</button>
+          <div>
+            <div class="page-title" id="cdetail-name">Classroom</div>
+            <div class="page-sub" id="cdetail-sub">Manage coursework and students</div>
+          </div>
+        </div>
+        <div id="cdetail-actions"></div>
+      </div>
+      <div id="cdetail-content"></div>
+    </div>
+
+    <!-- ─── COURSEWORK DETAIL PAGE ─── -->
+    <div class="page" id="page-coursework-detail">
+      <div class="page-header">
+        <div style="display:flex;align-items:center;gap:0.8rem">
+          <button class="btn btn-secondary btn-sm" id="cw-back-btn">← Back</button>
+          <div>
+            <div class="page-title" id="cw-name">Coursework</div>
+            <div class="page-sub" id="cw-sub">Submit or review</div>
+          </div>
+        </div>
+      </div>
+      <div id="cw-content"></div>
+    </div>
+
+    <!-- ─── SUBMISSIONS PAGE (teacher) ─── -->
+    <div class="page" id="page-submissions">
+      <div class="page-header">
+        <div><div class="page-title">Submissions</div><div class="page-sub">Review AI-graded work</div></div>
+      </div>
+      <div id="submissions-content"></div>
+    </div>
+
+    <!-- ─── STUDENTS PAGE (teacher) ─── -->
+    <div class="page" id="page-students">
+      <div class="page-header">
+        <div><div class="page-title">Students</div><div class="page-sub">Enrolled students across all classrooms</div></div>
+      </div>
+      <div id="students-content"></div>
+    </div>
+
+    <!-- ─── MY GRADES PAGE (student) ─── -->
+    <div class="page" id="page-grades">
+      <div class="page-header">
+        <div><div class="page-title">My Grades</div><div class="page-sub">Your submission results</div></div>
+      </div>
+      <div id="grades-content"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ══ MODALS ══ -->
+<!-- Create Classroom -->
+<div class="modal-overlay" id="modal-create-classroom">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Create New Classroom</div>
+      <button class="modal-close" onclick="closeModal('modal-create-classroom')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="field-label">Classroom Name</label>
+        <input type="text" id="new-classroom-name" placeholder="e.g. Advanced AI — Batch 2024"/>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-create-classroom')">Cancel</button>
+      <button class="btn btn-primary" onclick="createClassroom()">Create →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Join Classroom -->
+<div class="modal-overlay" id="modal-join-classroom">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Join a Classroom</div>
+      <button class="modal-close" onclick="closeModal('modal-join-classroom')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="field-label">Invite Code</label>
+        <input type="text" id="join-code" placeholder="e.g. A3F8C2" style="text-transform:uppercase;letter-spacing:0.1em;font-family:'Syne',sans-serif;font-weight:700;font-size:1rem"/>
+      </div>
+      <div style="margin-top:1rem;font-size:0.8rem;color:var(--muted)">
+        Ask your teacher for the 6-character invite code.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-join-classroom')">Cancel</button>
+      <button class="btn btn-primary" onclick="joinClassroom()">Join →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create Coursework -->
+<div class="modal-overlay" id="modal-create-coursework">
+  <div class="modal" style="max-width:700px">
+    <div class="modal-header">
+      <div class="modal-title">Create New Coursework</div>
+      <button class="modal-close" onclick="closeModal('modal-create-coursework')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="grid-2" style="margin-bottom:1rem">
+        <div class="form-group">
+          <label class="field-label">Name</label>
+          <input type="text" id="cw-new-name" placeholder="e.g. Module 1 Quiz"/>
+        </div>
+        <div class="form-group">
+          <label class="field-label">Type</label>
+          <select id="cw-new-type" onchange="onCourseworkTypeChange()">
+            <option value="quiz">Quiz</option>
+            <option value="essay">Essay</option>
+            <option value="assignment">Assignment</option>
+            <option value="case_study">Case Study</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid-2" style="margin-bottom:1.2rem">
+        <div class="form-group">
+          <label class="field-label">Available From</label>
+          <input type="datetime-local" id="cw-available-from"/>
+        </div>
+        <div class="form-group">
+          <label class="field-label">Due At (optional)</label>
+          <input type="datetime-local" id="cw-due-at"/>
+        </div>
+      </div>
+
+      <!-- Quiz builder -->
+      <div id="quiz-builder-section">
+        <div class="divider"></div>
+        <div class="section-header">
+          <div class="section-label">Questions</div>
+          <button class="btn btn-secondary btn-sm" onclick="addQuestion()">+ Add Question</button>
+        </div>
+        <div id="questions-container"></div>
+      </div>
+
+      <!-- Rubric builder -->
+      <div id="rubric-builder-section" style="display:none">
+        <div class="divider"></div>
+        <div class="section-header">
+          <div class="section-label">Grading Rubric</div>
+          <button class="btn btn-secondary btn-sm" onclick="addRubricCriterion()">+ Add Criterion</button>
+        </div>
+        <div id="rubric-criteria-container" class="rubric-criteria-list"></div>
+        <div style="margin-top:1rem;padding:0.8rem 1rem;background:rgba(30,95,200,0.06);border:1px solid rgba(30,95,200,0.15);border-radius:6px;font-size:0.78rem;color:var(--accent2)">
+          💡 In the full app, you can upload a .pdf/.txt rubric and use AI to parse it automatically.
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-create-coursework')">Cancel</button>
+      <button class="btn btn-primary" onclick="createCoursework()">Create Coursework →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Submission Review (teacher) -->
+<div class="modal-overlay" id="modal-review-submission">
+  <div class="modal" style="max-width:700px">
+    <div class="modal-header">
+      <div class="modal-title">Review Submission</div>
+      <button class="modal-close" onclick="closeModal('modal-review-submission')">✕</button>
+    </div>
+    <div class="modal-body" id="modal-review-body"></div>
+    <div class="modal-footer" id="modal-review-footer"></div>
+  </div>
+</div>
+
+<!-- Take Quiz modal -->
+<div class="modal-overlay" id="modal-take-quiz">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-header">
+      <div class="modal-title" id="quiz-modal-title">Take Quiz</div>
+      <button class="modal-close" onclick="closeModal('modal-take-quiz')">✕</button>
+    </div>
+    <div class="modal-body" id="quiz-modal-body"></div>
+    <div class="modal-footer" id="quiz-modal-footer"></div>
+  </div>
+</div>
+
+<!-- Essay Submit modal -->
+<div class="modal-overlay" id="modal-submit-essay">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-header">
+      <div class="modal-title" id="essay-modal-title">Submit Essay</div>
+      <button class="modal-close" onclick="closeModal('modal-submit-essay')">✕</button>
+    </div>
+    <div class="modal-body" id="essay-modal-body"></div>
+    <div class="modal-footer" id="essay-modal-footer"></div>
+  </div>
+</div>
+
+<!-- AI Grading progress modal -->
+<div class="modal-overlay" id="modal-ai-grading">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header">
+      <div class="modal-title">🤖 AI Grading in Progress</div>
+    </div>
+    <div class="modal-body" id="ai-grading-body"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════
+//  DATA STORE
+// ════════════════════════════════════
+const DB = {
+  users:[
+    {id:1,email:'teacher@alms.dev',password:'teach123',role:'teacher',name:'Dr. Priya Sharma',enrollmentNumber:null,isApproved:true},
+    {id:2,email:'student@alms.dev',password:'study123',role:'student',name:'Arjun Reddy',enrollmentNumber:'STU001',isApproved:true},
+    {id:3,email:'student2@alms.dev',password:'study456',role:'student',name:'Sneha Patel',enrollmentNumber:'STU002',isApproved:true},
+  ],
+  classrooms:[
+    {id:1,name:'Advanced AI Engineering',inviteCode:'AI2024',teacherId:1,studentIds:[2,3]},
+    {id:2,name:'Data Structures & Algorithms',inviteCode:'DSA101',teacherId:1,studentIds:[2]},
+  ],
+  courseworks:[
+    {id:1,classroomId:1,name:'Module 1: Intro to AI — Quiz',type:'quiz',availableFrom:'2024-01-01T00:00',dueAt:'2099-12-31T23:59',
+     questions:[
+       {id:1,text:'What does LLM stand for?',options:[{id:1,text:'Large Language Model',correct:true},{id:2,text:'Linear Learning Machine',correct:false},{id:3,text:'Low Latency Module',correct:false},{id:4,text:'Layered Logic Model',correct:false}]},
+       {id:2,text:'Which framework is used for building agent pipelines in this project?',options:[{id:5,text:'AutoGen',correct:false},{id:6,text:'CrewAI',correct:false},{id:7,text:'LangGraph',correct:true},{id:8,text:'Haystack',correct:false}]},
+       {id:3,text:'What does DSKG stand for?',options:[{id:9,text:'Dynamic Student Knowledge Graph',correct:true},{id:10,text:'Deep Sequential Knowledge Gate',correct:false},{id:11,text:'Distributed System Knowledge Grid',correct:false},{id:12,text:'Data Structure Key Generator',correct:false}]},
+     ]},
+    {id:2,classroomId:1,name:'Case Study: AI Ethics in Education',type:'case_study',availableFrom:'2024-01-01T00:00',dueAt:'2099-12-31T23:59',
+     rubric:[
+       {criterion:'Problem Identification',maxPoints:20},
+       {criterion:'Critical Analysis',maxPoints:30},
+       {criterion:'Evidence & Examples',maxPoints:25},
+       {criterion:'Conclusion & Recommendations',maxPoints:25},
+     ]},
+    {id:3,classroomId:2,name:'Sorting Algorithms Quiz',type:'quiz',availableFrom:'2024-01-01T00:00',dueAt:'2099-12-31T23:59',
+     questions:[
+       {id:13,text:'What is the average time complexity of QuickSort?',options:[{id:13,text:'O(n²)',correct:false},{id:14,text:'O(n log n)',correct:true},{id:15,text:'O(n)',correct:false},{id:16,text:'O(log n)',correct:false}]},
+       {id:14,text:'Which sort is stable by default?',options:[{id:17,text:'QuickSort',correct:false},{id:18,text:'HeapSort',correct:false},{id:19,text:'MergeSort',correct:true},{id:20,text:'SelectionSort',correct:false}]},
+     ]},
+  ],
+  submissions:[
+    {id:1,courseworkId:1,studentId:2,submittedAt:'2024-03-10T14:30',status:'GRADED',score:0.67,answers:[{questionId:1,selectedOptionId:1},{questionId:2,selectedOptionId:5},{questionId:3,selectedOptionId:9}],aiFeedback:null,finalScore:null,finalFeedback:'Good understanding of core concepts. Review agent frameworks.'},
+    {id:2,courseworkId:2,studentId:2,submittedAt:'2024-03-12T09:15',status:'PENDING_REVIEW',score:0.78,
+     submissionText:'Artificial intelligence in education raises significant ethical concerns. Firstly, algorithmic bias can disadvantage certain student groups if training data lacks diversity. Secondly, privacy concerns arise when student behavioral data is continuously monitored and stored. AI grading systems may also fail to capture creativity and critical thinking that human evaluators would recognize. However, AI also presents opportunities for personalized learning and early identification of students who need support. Institutions must establish clear governance frameworks that prioritize transparency, student consent, and regular auditing of AI systems.',
+     aiFeedback:[
+       {criterion:'Problem Identification',score:18,maxPoints:20,justification:'Clear identification of bias and privacy as key issues. Could have included more specific examples from real-world deployments.'},
+       {criterion:'Critical Analysis',score:22,maxPoints:30,justification:'Good analysis of both sides. The argument around creativity limitations is well-reasoned but needs stronger evidence.'},
+       {criterion:'Evidence & Examples',score:18,maxPoints:25,justification:'Uses general examples effectively but lacks specific citations or case studies to strengthen claims.'},
+       {criterion:'Conclusion & Recommendations',score:20,maxPoints:25,justification:'The governance framework recommendation is practical and well-articulated.'},
+     ],finalScore:null,finalFeedback:null},
+  ],
+  nextId:{user:4,classroom:3,coursework:4,submission:3}
+};
+
+let currentUser = null;
+let currentClassroomId = null;
+let currentCourseworkId = null;
+
+// ════════════════════════════════════
+//  AUTH
+// ════════════════════════════════════
+function fillCreds(email,pass,role){
+  document.getElementById('login-id').value=email;
+  document.getElementById('login-pass').value=pass;
+  document.getElementById('login-role').value=role;
+  switchAuthTab('login');
+}
+
+function switchAuthTab(tab){
+  document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.auth-form').forEach(f=>f.classList.remove('active'));
+  if(tab==='login'){
+    document.querySelectorAll('.auth-tab')[0].classList.add('active');
+    document.getElementById('form-login').classList.add('active');
+  } else {
+    document.querySelectorAll('.auth-tab')[1].classList.add('active');
+    document.getElementById('form-register').classList.add('active');
+  }
+}
+
+function toggleEnrollField(){
+  const role=document.getElementById('reg-role').value;
+  document.getElementById('enroll-group').style.display=role==='student'?'flex':'none';
+}
+
+function handleLogin(e){
+  e.preventDefault();
+  const id=document.getElementById('login-id').value.trim();
+  const pass=document.getElementById('login-pass').value;
+  const role=document.getElementById('login-role').value;
+  const err=document.getElementById('login-err');
+  err.classList.remove('show');
+
+  const user=DB.users.find(u=>(u.email===id||u.enrollmentNumber===id)&&u.password===pass);
+  if(!user){err.textContent='Incorrect credentials.';err.classList.add('show');return}
+  if(user.role!==role){err.textContent=`You are not registered as a ${role}.`;err.classList.add('show');return}
+  if(!user.isApproved){err.textContent='Account pending approval.';err.classList.add('show');return}
+
+  currentUser=user;
+  bootApp();
+}
+
+function handleRegister(e){
+  e.preventDefault();
+  const email=document.getElementById('reg-email').value.trim();
+  const pass=document.getElementById('reg-pass').value;
+  const role=document.getElementById('reg-role').value;
+  const enroll=document.getElementById('reg-enroll').value.trim();
+  const err=document.getElementById('reg-err');
+  err.classList.remove('show');
+
+  if(DB.users.find(u=>u.email===email)){err.textContent='Email already registered.';err.classList.add('show');return}
+  if(role==='student'&&!enroll){err.textContent='Enrollment number required for students.';err.classList.add('show');return}
+  if(role==='student'&&DB.users.find(u=>u.enrollmentNumber===enroll)){err.textContent='Enrollment number already in use.';err.classList.add('show');return}
+
+  const newUser={
+    id:DB.nextId.user++,email,password:pass,role,
+    name:email.split('@')[0],
+    enrollmentNumber:role==='student'?enroll:null,
+    isApproved:role==='student'  // teachers need approval; students auto-approved
+  };
+  DB.users.push(newUser);
+
+  if(role==='teacher'){
+    showToast('Teacher account created — pending admin approval. Use demo credentials to continue.','error');
+  } else {
+    showToast('Account created! You can now login.','success');
+    switchAuthTab('login');
+    document.getElementById('login-id').value=email;
+  }
+}
+
+function logout(){
+  currentUser=null;
+  document.getElementById('screen-app').classList.remove('active');
+  document.getElementById('screen-auth').classList.add('active');
+  showToast('Logged out successfully');
+}
+
+// ════════════════════════════════════
+//  APP BOOT
+// ════════════════════════════════════
+function bootApp(){
+  document.getElementById('screen-auth').classList.remove('active');
+  document.getElementById('screen-app').classList.add('active');
+
+  document.getElementById('sidebar-name').textContent=currentUser.name;
+  const rb=document.getElementById('sidebar-role-badge');
+  rb.textContent=currentUser.role;
+  rb.className='sidebar-user-role role-'+currentUser.role;
+
+  buildSidebar();
+  navigateTo('dashboard');
+}
+
+function buildSidebar(){
+  const nav=document.getElementById('sidebar-nav');
+  const isTeacher=currentUser.role==='teacher';
+  const items=isTeacher?[
+    {id:'dashboard',icon:'⊞',label:'Dashboard'},
+    {id:'classrooms',icon:'⬡',label:'Classrooms'},
+    {id:'submissions',icon:'✎',label:'Submissions'},
+    {id:'students',icon:'◈',label:'Students'},
+  ]:[
+    {id:'dashboard',icon:'⊞',label:'Dashboard'},
+    {id:'classrooms',icon:'⬡',label:'My Classes'},
+    {id:'grades',icon:'◈',label:'My Grades'},
+  ];
+  nav.innerHTML=items.map(i=>`
+    <div class="nav-item" id="nav-${i.id}" onclick="navigateTo('${i.id}')">
+      <span class="nav-item-icon">${i.icon}</span>${i.label}
+    </div>`).join('');
+}
+
+function navigateTo(page,extra){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const pg=document.getElementById('page-'+page);
+  if(pg)pg.classList.add('active');
+  const ni=document.getElementById('nav-'+page);
+  if(ni)ni.classList.add('active');
+
+  const renders={
+    dashboard:renderDashboard,
+    classrooms:renderClassrooms,
+    'classroom-detail':()=>renderClassroomDetail(extra),
+    'coursework-detail':()=>renderCourseworkDetail(extra),
+    submissions:renderSubmissions,
+    students:renderStudents,
+    grades:renderGrades,
+  };
+  if(renders[page])renders[page]();
+}
+
+// ════════════════════════════════════
+//  DASHBOARD
+// ════════════════════════════════════
+function renderDashboard(){
+  const isT=currentUser.role==='teacher';
+  document.getElementById('dash-title').textContent=`Good day, ${currentUser.name.split(' ')[0]} 👋`;
+  document.getElementById('dash-sub').textContent=isT?'Here\'s your teaching overview':'Here\'s your learning overview';
+
+  if(isT){
+    const myClassrooms=DB.classrooms.filter(c=>c.teacherId===currentUser.id);
+    const allSubs=DB.submissions.filter(s=>myClassrooms.some(c=>DB.courseworks.find(cw=>cw.id===s.courseworkId&&cw.classroomId===c.id)));
+    const pending=allSubs.filter(s=>s.status==='PENDING_REVIEW');
+    document.getElementById('dash-stats').innerHTML=`
+      <div class="stat-card"><div class="stat-card-num" style="color:var(--accent)">${myClassrooms.length}</div><div class="stat-card-lbl">Classrooms</div></div>
+      <div class="stat-card"><div class="stat-card-num">${myClassrooms.reduce((a,c)=>a+c.studentIds.length,0)}</div><div class="stat-card-lbl">Students</div></div>
+      <div class="stat-card"><div class="stat-card-num">${DB.courseworks.filter(c=>myClassrooms.some(m=>m.id===c.classroomId)).length}</div><div class="stat-card-lbl">Courseworks</div></div>
+      <div class="stat-card"><div class="stat-card-num" style="color:var(--warn)">${pending.length}</div><div class="stat-card-lbl">Pending Review</div></div>
+    `;
+    document.getElementById('dash-actions').innerHTML=`<button class="btn btn-primary" onclick="openModal('modal-create-classroom')">+ New Classroom</button>`;
+
+    let html='';
+    if(pending.length>0){
+      html+=`<div class="section-header"><div class="section-label">⚠ Pending Review</div></div>`;
+      html+=`<div style="display:flex;flex-direction:column;gap:0.6rem;margin-bottom:2rem">`;
+      pending.slice(0,3).forEach(s=>{
+        const student=DB.users.find(u=>u.id===s.studentId);
+        const cw=DB.courseworks.find(c=>c.id===s.courseworkId);
+        html+=`<div class="card" style="display:flex;align-items:center;gap:1rem;padding:1rem 1.5rem">
+          <div style="flex:1"><strong>${student?.name}</strong> submitted <em>${cw?.name}</em></div>
+          <span class="badge badge-orange">AI Score: ${Math.round(s.score*100)}%</span>
+          <button class="btn btn-primary btn-sm" onclick="openReviewModal(${s.id})">Review →</button>
+        </div>`;
+      });
+      html+='</div>';
+    }
+    html+=`<div class="section-header"><div class="section-label">Your Classrooms</div><button class="btn btn-secondary btn-sm" onclick="navigateTo('classrooms')">View All</button></div>`;
+    html+=`<div class="grid-2">`;
+    myClassrooms.forEach(c=>{
+      const cws=DB.courseworks.filter(cw=>cw.classroomId===c.id);
+      html+=`<div class="classroom-card" onclick="navigateTo('classroom-detail',${c.id})">
+        <div class="card-title">${c.name}</div>
+        <div class="card-sub" style="margin-top:0.4rem">${c.studentIds.length} students · ${cws.length} courseworks</div>
+        <div style="margin-top:1rem;display:flex;align-items:center;gap:0.6rem">
+          <span style="font-size:0.72rem;color:var(--muted)">Invite:</span>
+          <span class="invite-code" style="font-size:0.85rem;padding:0.3rem 0.8rem">${c.inviteCode}</span>
+        </div>
+      </div>`;
+    });
+    html+='</div>';
+    document.getElementById('dash-content').innerHTML=html;
+  } else {
+    const myClassrooms=DB.classrooms.filter(c=>c.studentIds.includes(currentUser.id));
+    const allCW=DB.courseworks.filter(c=>myClassrooms.some(m=>m.id===c.classroomId));
+    const mySubs=DB.submissions.filter(s=>s.studentId===currentUser.id);
+    const graded=mySubs.filter(s=>s.status==='GRADED'||s.status==='PENDING_REVIEW');
+    const avgScore=graded.length?Math.round(graded.reduce((a,s)=>a+s.score,0)/graded.length*100):0;
+
+    document.getElementById('dash-stats').innerHTML=`
+      <div class="stat-card"><div class="stat-card-num" style="color:var(--accent)">${myClassrooms.length}</div><div class="stat-card-lbl">Classes Joined</div></div>
+      <div class="stat-card"><div class="stat-card-num">${allCW.length}</div><div class="stat-card-lbl">Courseworks</div></div>
+      <div class="stat-card"><div class="stat-card-num">${mySubs.length}</div><div class="stat-card-lbl">Submitted</div></div>
+      <div class="stat-card"><div class="stat-card-num" style="color:var(--success)">${avgScore}%</div><div class="stat-card-lbl">Avg Score</div></div>
+    `;
+    document.getElementById('dash-actions').innerHTML=`<button class="btn btn-primary" onclick="openModal('modal-join-classroom')">+ Join Class</button>`;
+
+    let html=`<div class="section-header"><div class="section-label">Pending Submissions</div></div>`;
+    const pending=allCW.filter(cw=>!mySubs.find(s=>s.courseworkId===cw.id));
+    if(pending.length===0){
+      html+=`<div class="empty-state"><span class="empty-state-icon">🎉</span>All caught up! No pending coursework.</div>`;
+    } else {
+      html+=`<div style="display:flex;flex-direction:column;gap:0.6rem;margin-bottom:2rem">`;
+      pending.forEach(cw=>{
+        const room=myClassrooms.find(c=>c.id===cw.classroomId);
+        html+=`<div class="card" style="display:flex;align-items:center;gap:1rem;padding:1rem 1.5rem">
+          <span class="pill pill-${cw.type}">${cw.type}</span>
+          <div style="flex:1"><strong>${cw.name}</strong><div style="font-size:0.75rem;color:var(--muted)">${room?.name}</div></div>
+          <button class="btn btn-primary btn-sm" onclick="navigateTo('coursework-detail',${cw.id})">Open →</button>
+        </div>`;
+      });
+      html+='</div>';
+    }
+    html+=`<div class="section-header"><div class="section-label">My Classes</div></div>`;
+    html+=`<div class="grid-2">`;
+    myClassrooms.forEach(c=>{
+      const teacher=DB.users.find(u=>u.id===c.teacherId);
+      html+=`<div class="classroom-card" onclick="navigateTo('classroom-detail',${c.id})">
+        <div class="card-title">${c.name}</div>
+        <div class="card-sub" style="margin-top:0.3rem">Teacher: ${teacher?.name}</div>
+      </div>`;
+    });
+    if(myClassrooms.length===0) html+=`<div class="empty-state"><span class="empty-state-icon">🏫</span>No classes yet. <button class="btn btn-secondary btn-sm" onclick="openModal('modal-join-classroom')">Join one</button></div>`;
+    html+='</div>';
+    document.getElementById('dash-content').innerHTML=html;
+  }
+}
+
+// ════════════════════════════════════
+//  CLASSROOMS
+// ════════════════════════════════════
+function renderClassrooms(){
+  const isT=currentUser.role==='teacher';
+  document.getElementById('classrooms-sub').textContent=isT?'Classrooms you teach':'Classrooms you are enrolled in';
+  const actEl=document.getElementById('classrooms-actions');
+  actEl.innerHTML=isT
+    ?`<button class="btn btn-primary" onclick="openModal('modal-create-classroom')">+ Create Classroom</button>`
+    :`<button class="btn btn-primary" onclick="openModal('modal-join-classroom')">+ Join Classroom</button>`;
+
+  const myClassrooms=isT
+    ?DB.classrooms.filter(c=>c.teacherId===currentUser.id)
+    :DB.classrooms.filter(c=>c.studentIds.includes(currentUser.id));
+
+  let html='<div class="grid-2">';
+  if(myClassrooms.length===0){
+    html=`<div class="empty-state"><span class="empty-state-icon">🏫</span>${isT?'No classrooms yet. Create one!':'Not enrolled in any class yet.'}</div>`;
+  } else {
+    myClassrooms.forEach(c=>{
+      const cws=DB.courseworks.filter(cw=>cw.classroomId===c.id);
+      html+=`<div class="classroom-card" onclick="navigateTo('classroom-detail',${c.id})">
+        <div class="card-title">${c.name}</div>
+        <div class="card-sub" style="margin-top:0.4rem">${c.studentIds.length} students · ${cws.length} courseworks</div>
+        ${isT?`<div style="margin-top:1rem;display:flex;align-items:center;gap:0.6rem">
+          <span style="font-size:0.72rem;color:var(--muted)">Invite code:</span>
+          <span class="invite-code">${c.inviteCode}</span>
+        </div>`:''}
+        <div style="margin-top:1rem"><button class="btn btn-secondary btn-sm">Open →</button></div>
+      </div>`;
+    });
+    html+='</div>';
+  }
+  document.getElementById('classrooms-content').innerHTML=html;
+}
+
+function createClassroom(){
+  const name=document.getElementById('new-classroom-name').value.trim();
+  if(!name){showToast('Enter a classroom name','error');return}
+  const codes='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const code=Array.from({length:6},()=>codes[Math.floor(Math.random()*codes.length)]).join('');
+  const newC={id:DB.nextId.classroom++,name,inviteCode:code,teacherId:currentUser.id,studentIds:[]};
+  DB.classrooms.push(newC);
+  closeModal('modal-create-classroom');
+  document.getElementById('new-classroom-name').value='';
+  showToast(`Classroom "${name}" created! Invite code: ${code}`,'success');
+  navigateTo('classrooms');
+}
+
+function joinClassroom(){
+  const code=document.getElementById('join-code').value.trim().toUpperCase();
+  const room=DB.classrooms.find(c=>c.inviteCode===code);
+  if(!room){showToast('Invalid invite code','error');return}
+  if(room.studentIds.includes(currentUser.id)){showToast('Already enrolled in this class','error');return}
+  room.studentIds.push(currentUser.id);
+  closeModal('modal-join-classroom');
+  document.getElementById('join-code').value='';
+  showToast(`Joined "${room.name}" successfully!`,'success');
+  navigateTo('classrooms');
+}
+
+// ════════════════════════════════════
+//  CLASSROOM DETAIL
+// ════════════════════════════════════
+function renderClassroomDetail(classroomId){
+  currentClassroomId=classroomId;
+  const room=DB.classrooms.find(c=>c.id===classroomId);
+  if(!room)return;
+  const isT=currentUser.role==='teacher';
+  document.getElementById('cdetail-name').textContent=room.name;
+  document.getElementById('cdetail-sub').textContent=isT?`Invite: ${room.inviteCode} · ${room.studentIds.length} students`:`${room.studentIds.length} students enrolled`;
+  const actEl=document.getElementById('cdetail-actions');
+  actEl.innerHTML=isT?`<button class="btn btn-primary" onclick="openCreateCoursework(${room.id})">+ Add Coursework</button>`:'' ;
+
+  const cws=DB.courseworks.filter(cw=>cw.classroomId===classroomId);
+  let html=`<div class="section-header"><div class="section-label">Coursework (${cws.length})</div></div>`;
+
+  if(cws.length===0){
+    html+=`<div class="empty-state"><span class="empty-state-icon">📝</span>No coursework yet.${isT?' Create one above.':''}</div>`;
+  } else {
+    html+=`<table class="data-table"><thead><tr><th>Name</th><th>Type</th><th>Due</th>${isT?'<th>Submissions</th>':''}<th>Action</th></tr></thead><tbody>`;
+    cws.forEach(cw=>{
+      const subs=DB.submissions.filter(s=>s.courseworkId===cw.id);
+      const mySub=DB.submissions.find(s=>s.courseworkId===cw.id&&s.studentId===currentUser.id);
+      html+=`<tr>
+        <td><strong>${cw.name}</strong></td>
+        <td><span class="pill pill-${cw.type}">${cw.type}</span></td>
+        <td style="color:var(--muted);font-size:0.78rem">${cw.dueAt?new Date(cw.dueAt).toLocaleDateString():'No deadline'}</td>
+        ${isT?`<td><span class="badge badge-gray">${subs.length} / ${room.studentIds.length}</span></td>`:''}
+        <td>${isT
+          ?`<button class="btn btn-secondary btn-sm" onclick="navigateTo('coursework-detail',${cw.id})">View Submissions</button>`
+          :mySub
+            ?`<button class="btn btn-success btn-sm" onclick="navigateTo('coursework-detail',${cw.id})">View Result</button>`
+            :`<button class="btn btn-primary btn-sm" onclick="navigateTo('coursework-detail',${cw.id})">Submit →</button>`
+        }</td>
+      </tr>`;
+    });
+    html+=`</tbody></table>`;
+  }
+
+  if(isT){
+    const students=DB.users.filter(u=>room.studentIds.includes(u.id));
+    html+=`<div class="divider"></div><div class="section-header"><div class="section-label">Enrolled Students (${students.length})</div></div>`;
+    if(students.length===0){
+      html+=`<div class="empty-state"><span class="empty-state-icon">👥</span>No students enrolled yet. Share the invite code: <span class="invite-code" style="font-size:0.9rem">${room.inviteCode}</span></div>`;
+    } else {
+      html+=`<table class="data-table"><thead><tr><th>Name</th><th>Enrollment #</th><th>Email</th><th>Action</th></tr></thead><tbody>`;
+      students.forEach(s=>{
+        html+=`<tr>
+          <td><strong>${s.name}</strong></td>
+          <td style="font-family:'Syne',sans-serif;font-weight:700;color:var(--muted)">${s.enrollmentNumber}</td>
+          <td style="color:var(--muted)">${s.email}</td>
+          <td><button class="btn btn-danger btn-sm" onclick="removeStudent(${room.id},${s.id})">Remove</button></td>
+        </tr>`;
+      });
+      html+=`</tbody></table>`;
+    }
+  }
+  document.getElementById('cdetail-content').innerHTML=html;
+}
+
+function removeStudent(classroomId,studentId){
+  const room=DB.classrooms.find(c=>c.id===classroomId);
+  if(!room)return;
+  room.studentIds=room.studentIds.filter(id=>id!==studentId);
+  showToast('Student removed','success');
+  renderClassroomDetail(classroomId);
+}
+
+// ════════════════════════════════════
+//  CREATE COURSEWORK
+// ════════════════════════════════════
+let cwTargetClassroomId=null;
+
+function openCreateCoursework(classroomId){
+  cwTargetClassroomId=classroomId;
+  document.getElementById('cw-new-name').value='';
+  document.getElementById('cw-new-type').value='quiz';
+  const now=new Date();now.setMinutes(0);
+  document.getElementById('cw-available-from').value=now.toISOString().slice(0,16);
+  document.getElementById('cw-due-at').value='';
+  document.getElementById('questions-container').innerHTML='';
+  document.getElementById('rubric-criteria-container').innerHTML='';
+  addQuestion();
+  onCourseworkTypeChange();
+  openModal('modal-create-coursework');
+}
+
+function onCourseworkTypeChange(){
+  const t=document.getElementById('cw-new-type').value;
+  document.getElementById('quiz-builder-section').style.display=t==='quiz'?'block':'none';
+  document.getElementById('rubric-builder-section').style.display=t!=='quiz'?'block':'none';
+  if(t!=='quiz'&&document.getElementById('rubric-criteria-container').children.length===0){
+    addRubricCriterion('Problem Identification',20);
+    addRubricCriterion('Analysis & Reasoning',30);
+    addRubricCriterion('Evidence & Support',25);
+    addRubricCriterion('Conclusion',25);
+  }
+}
+
+let qCount=0,rCount=0;
+function addQuestion(){
+  qCount++;
+  const qId='q'+qCount;
+  const div=document.createElement('div');
+  div.className='question-block';div.id=qId;
+  div.innerHTML=`
+    <div class="question-header">
+      <strong style="font-family:'Syne',sans-serif;font-size:0.82rem">Question ${qCount}</strong>
+      <button class="btn btn-danger btn-sm" onclick="this.closest('.question-block').remove()">Remove</button>
+    </div>
+    <div class="form-group" style="margin-bottom:0.8rem">
+      <input type="text" placeholder="Enter your question..." class="q-text" style="width:100%"/>
+    </div>
+    <div class="options-list"></div>
+    <button type="button" class="btn btn-secondary btn-sm" style="margin-top:0.5rem" onclick="addOption('${qId}')">+ Add Option</button>
+  `;
+  document.getElementById('questions-container').appendChild(div);
+  addOption(qId,'');addOption(qId,'');
+}
+
+function addOption(qId,val=''){
+  const container=document.querySelector(`#${qId} .options-list`);
+  const oIdx=container.children.length+1;
+  const div=document.createElement('div');
+  div.className='option-row';
+  div.innerHTML=`
+    <input type="radio" name="correct_${qId}" title="Mark as correct"/>
+    <input type="text" placeholder="Option ${oIdx}" value="${val}" class="opt-text" style="flex:1"/>
+    <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" style="padding:0.3rem 0.6rem">✕</button>
+  `;
+  container.appendChild(div);
+}
+
+function addRubricCriterion(name='',pts=10){
+  rCount++;
+  const div=document.createElement('div');
+  div.className='rubric-criterion-item';
+  div.innerHTML=`
+    <input type="text" placeholder="Criterion name" value="${name}" class="rc-name" style="flex:1;border:none;background:transparent"/>
+    <span style="font-size:0.72rem;color:var(--muted);white-space:nowrap">Max pts:</span>
+    <input type="number" value="${pts}" min="1" max="100" class="rc-pts" style="width:60px"/>
+    <button class="rubric-del-btn" onclick="this.parentElement.remove()">✕</button>
+  `;
+  document.getElementById('rubric-criteria-container').appendChild(div);
+}
+
+function createCoursework(){
+  const name=document.getElementById('cw-new-name').value.trim();
+  const type=document.getElementById('cw-new-type').value;
+  const af=document.getElementById('cw-available-from').value;
+  const da=document.getElementById('cw-due-at').value;
+  if(!name){showToast('Enter a coursework name','error');return}
+
+  let questions=null,rubric=null;
+  if(type==='quiz'){
+    questions=[];
+    let qId=100+DB.nextId.coursework*10;
+    document.querySelectorAll('#questions-container .question-block').forEach(qb=>{
+      const qtext=qb.querySelector('.q-text').value.trim();
+      if(!qtext)return;
+      const options=[];
+      qb.querySelectorAll('.option-row').forEach((or,oi)=>{
+        const txt=or.querySelector('.opt-text').value.trim();
+        if(!txt)return;
+        const correct=or.querySelector('input[type=radio]').checked;
+        options.push({id:qId*10+oi,text:txt,correct});
+      });
+      questions.push({id:qId++,text:qtext,options});
+    });
+    if(questions.length===0){showToast('Add at least one question','error');return}
+  } else {
+    rubric=[];
+    document.querySelectorAll('#rubric-criteria-container .rubric-criterion-item').forEach(ri=>{
+      const n=ri.querySelector('.rc-name').value.trim();
+      const p=parseInt(ri.querySelector('.rc-pts').value)||10;
+      if(n)rubric.push({criterion:n,maxPoints:p});
+    });
+    if(rubric.length===0){showToast('Add at least one rubric criterion','error');return}
+  }
+
+  const newCW={
+    id:DB.nextId.coursework++,
+    classroomId:cwTargetClassroomId,
+    name,type,
+    availableFrom:af||new Date().toISOString(),
+    dueAt:da||null,
+    questions,rubric
+  };
+  DB.courseworks.push(newCW);
+  closeModal('modal-create-coursework');
+  showToast(`"${name}" created!`,'success');
+  navigateTo('classroom-detail',cwTargetClassroomId);
+}
+
+// ════════════════════════════════════
+//  COURSEWORK DETAIL (student view)
+// ════════════════════════════════════
+function renderCourseworkDetail(cwId){
+  currentCourseworkId=cwId;
+  const cw=DB.courseworks.find(c=>c.id===cwId);
+  if(!cw)return;
+  const room=DB.classrooms.find(c=>c.id===cw.classroomId);
+  document.getElementById('cw-name').textContent=cw.name;
+  document.getElementById('cw-sub').textContent=room?.name;
+  const backBtn=document.getElementById('cw-back-btn');
+  backBtn.onclick=()=>navigateTo('classroom-detail',cw.classroomId);
+
+  const isT=currentUser.role==='teacher';
+  const mySub=DB.submissions.find(s=>s.courseworkId===cwId&&s.studentId===currentUser.id);
+
+  let html='';
+  if(isT){
+    // Teacher: see all submissions
+    const subs=DB.submissions.filter(s=>s.courseworkId===cwId);
+    html+=`<div class="card" style="margin-bottom:1.5rem">
+      <div class="card-title">${cw.name}</div>
+      <div class="card-sub">Type: <span class="pill pill-${cw.type}">${cw.type}</span> &nbsp; Submissions: ${subs.length}</div>
+    </div>`;
+    html+=`<div class="section-header"><div class="section-label">Submissions (${subs.length})</div></div>`;
+    if(subs.length===0){html+=`<div class="empty-state"><span class="empty-state-icon">📭</span>No submissions yet.</div>`;}
+    else{
+      html+=`<table class="data-table"><thead><tr><th>Student</th><th>Submitted</th><th>AI Score</th><th>Status</th><th>Action</th></tr></thead><tbody>`;
+      subs.forEach(s=>{
+        const student=DB.users.find(u=>u.id===s.studentId);
+        html+=`<tr>
+          <td><strong>${student?.name}</strong></td>
+          <td style="color:var(--muted);font-size:0.78rem">${new Date(s.submittedAt).toLocaleString()}</td>
+          <td><span class="badge ${s.score>=0.7?'badge-green':'badge-orange'}">${Math.round(s.score*100)}%</span></td>
+          <td>${statusBadge(s.status)}</td>
+          <td><button class="btn btn-primary btn-sm" onclick="openReviewModal(${s.id})">Review</button></td>
+        </tr>`;
+      });
+      html+=`</tbody></table>`;
+    }
+  } else {
+    // Student view
+    if(mySub){
+      html+=renderSubmissionResult(mySub,cw);
+    } else {
+      html+=`<div class="card" style="margin-bottom:1.5rem">
+        <div class="card-title">${cw.name}</div>
+        <div style="display:flex;gap:1rem;margin-top:0.8rem;flex-wrap:wrap">
+          <span class="pill pill-${cw.type}">${cw.type}</span>
+          ${cw.dueAt?`<span style="font-size:0.78rem;color:var(--muted)">Due: ${new Date(cw.dueAt).toLocaleDateString()}</span>`:''}
+        </div>
+        ${cw.rubric?`<div style="margin-top:1.2rem"><div class="section-label" style="margin-bottom:0.6rem">Grading Rubric</div>${cw.rubric.map(r=>`<div style="display:flex;justify-content:space-between;padding:0.4rem 0;border-bottom:1px solid var(--rule);font-size:0.82rem"><span>${r.criterion}</span><span style="color:var(--muted)">${r.maxPoints} pts</span></div>`).join('')}</div>`:''}
+      </div>`;
+      if(cw.type==='quiz'){
+        html+=`<button class="btn btn-primary" onclick="openQuizModal(${cwId})">▶ Take Quiz Now</button>`;
+      } else {
+        html+=`<button class="btn btn-primary" onclick="openEssayModal(${cwId})">✎ Submit Work</button>`;
+      }
+    }
+  }
+  document.getElementById('cw-content').innerHTML=html;
+}
+
+function renderSubmissionResult(sub,cw){
+  const isGraded=sub.status==='GRADED'||sub.status==='PENDING_REVIEW';
+  let html=`<div style="display:flex;align-items:center;gap:1.5rem;margin-bottom:2rem;flex-wrap:wrap">`;
+  if(isGraded){
+    const pct=Math.round(sub.score*100);
+    html+=`<div class="score-circle" style="--pct:${pct}"><div class="score-circle-num">${pct}%</div></div>`;
+  }
+  html+=`<div>
+    <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem">${cw.name}</div>
+    <div style="margin-top:0.4rem">${statusBadge(sub.status)}</div>
+    <div style="font-size:0.78rem;color:var(--muted);margin-top:0.3rem">Submitted ${new Date(sub.submittedAt).toLocaleString()}</div>
+  </div></div>`;
+
+  if(sub.status==='PENDING_REVIEW'){
+    html+=`<div style="padding:0.9rem 1.2rem;background:rgba(230,81,0,0.08);border:1px solid rgba(230,81,0,0.2);border-radius:6px;font-size:0.82rem;color:var(--warn);margin-bottom:1.5rem">⏳ Your submission is being reviewed by the teacher. Detailed feedback will appear once approved.</div>`;
+  }
+
+  if(sub.aiFeedback&&isGraded){
+    html+=`<div class="section-label" style="margin-bottom:0.5rem">AI Feedback Breakdown</div>
+    <table class="feedback-table"><thead><tr><th>Criterion</th><th>Score</th><th>Justification</th></tr></thead><tbody>`;
+    sub.aiFeedback.forEach(f=>{
+      html+=`<tr><td><strong>${f.criterion}</strong></td><td><span class="score-chip">${f.score}/${f.maxPoints}</span></td><td style="color:var(--muted)">${f.justification}</td></tr>`;
+    });
+    html+=`</tbody></table>`;
+  }
+  if(sub.finalFeedback){
+    html+=`<div style="margin-top:1.5rem;padding:1rem 1.2rem;background:rgba(46,125,50,0.06);border:1px solid rgba(46,125,50,0.2);border-radius:6px">
+      <div class="section-label" style="margin-bottom:0.5rem;color:var(--success)">Teacher Feedback</div>
+      <div style="font-size:0.85rem">${sub.finalFeedback}</div>
+    </div>`;
+  }
+  if(cw.type==='quiz'&&sub.answers){
+    html+=`<div class="divider"></div><div class="section-label" style="margin-bottom:1rem">Your Answers</div>`;
+    sub.answers.forEach(a=>{
+      const q=cw.questions?.find(q=>q.id===a.questionId);
+      if(!q)return;
+      const correct=q.options.find(o=>o.correct);
+      const chosen=q.options.find(o=>o.id===a.selectedOptionId);
+      const right=chosen?.correct;
+      html+=`<div style="padding:0.8rem 1rem;margin-bottom:0.6rem;background:${right?'rgba(46,125,50,0.06)':'rgba(200,64,30,0.06)'};border:1px solid ${right?'rgba(46,125,50,0.2)':'rgba(200,64,30,0.2)'};border-radius:6px;font-size:0.82rem">
+        <div style="font-weight:600;margin-bottom:0.3rem">${q.text}</div>
+        <div>Your answer: <strong style="color:${right?'var(--success)':'var(--accent)'}">${chosen?.text||'—'}</strong> ${right?'✓':'✗'}</div>
+        ${!right?`<div style="color:var(--success)">Correct: ${correct?.text}</div>`:''}
+      </div>`;
+    });
+  }
+  return html;
+}
+
+function statusBadge(s){
+  const map={SUBMITTED:'badge-gray',GRADING:'badge-blue',PENDING_REVIEW:'badge-orange',GRADED:'badge-green',ERROR:'badge-red'};
+  return `<span class="badge ${map[s]||'badge-gray'}">${s}</span>`;
+}
+
+// ════════════════════════════════════
+//  TAKE QUIZ MODAL
+// ════════════════════════════════════
+function openQuizModal(cwId){
+  const cw=DB.courseworks.find(c=>c.id===cwId);
+  if(!cw||!cw.questions)return;
+  document.getElementById('quiz-modal-title').textContent=cw.name;
+  const answers={};
+  let body=`<div style="font-size:0.8rem;color:var(--muted);margin-bottom:1.5rem">${cw.questions.length} questions · Select the correct answer for each</div>`;
+  cw.questions.forEach((q,qi)=>{
+    body+=`<div style="margin-bottom:1.5rem">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.85rem;margin-bottom:0.6rem">Q${qi+1}. ${q.text}</div>`;
+    q.options.forEach(opt=>{
+      body+=`<label style="display:flex;align-items:center;gap:0.7rem;padding:0.6rem 0.8rem;margin-bottom:0.4rem;border:1px solid var(--rule);border-radius:5px;cursor:pointer;font-size:0.82rem;transition:background 0.15s">
+        <input type="radio" name="quiz_q_${q.id}" value="${opt.id}" style="flex-shrink:0" onchange="quizAnswers[${q.id}]=${opt.id}"/>
+        ${opt.text}
+      </label>`;
+    });
+    body+=`</div>`;
+  });
+  document.getElementById('quiz-modal-body').innerHTML=body;
+  window.quizAnswers={};
+  document.getElementById('quiz-modal-footer').innerHTML=`
+    <button class="btn btn-secondary" onclick="closeModal('modal-take-quiz')">Cancel</button>
+    <button class="btn btn-primary" onclick="submitQuiz(${cwId})">Submit Quiz →</button>
+  `;
+  openModal('modal-take-quiz');
+}
+
+function submitQuiz(cwId){
+  const cw=DB.courseworks.find(c=>c.id===cwId);
+  const answered=Object.keys(window.quizAnswers).length;
+  if(answered<cw.questions.length){showToast('Please answer all questions','error');return}
+
+  let correct=0;
+  const answers=[];
+  cw.questions.forEach(q=>{
+    const selId=parseInt(window.quizAnswers[q.id]);
+    const selOpt=q.options.find(o=>o.id===selId);
+    if(selOpt?.correct)correct++;
+    answers.push({questionId:q.id,selectedOptionId:selId});
+  });
+  const score=correct/cw.questions.length;
+
+  const sub={
+    id:DB.nextId.submission++,courseworkId:cwId,studentId:currentUser.id,
+    submittedAt:new Date().toISOString(),status:'GRADED',score,answers,
+    aiFeedback:null,finalScore:null,finalFeedback:null
+  };
+  DB.submissions.push(sub);
+  closeModal('modal-take-quiz');
+  showToast(`Quiz submitted! Score: ${Math.round(score*100)}%`,'success');
+  navigateTo('coursework-detail',cwId);
+}
+
+// ════════════════════════════════════
+//  SUBMIT ESSAY MODAL
+// ════════════════════════════════════
+function openEssayModal(cwId){
+  const cw=DB.courseworks.find(c=>c.id===cwId);
+  document.getElementById('essay-modal-title').textContent=cw.name;
+  let body=`<div style="font-size:0.8rem;color:var(--muted);margin-bottom:1.2rem">Your work will be reviewed by our AI agents then sent to your teacher for final approval.</div>`;
+  if(cw.rubric){
+    body+=`<div style="padding:0.8rem 1rem;background:var(--paper);border-radius:6px;margin-bottom:1rem;font-size:0.78rem">
+      <div class="section-label" style="margin-bottom:0.5rem">Rubric</div>
+      ${cw.rubric.map(r=>`<div style="display:flex;justify-content:space-between;padding:0.25rem 0;border-bottom:1px solid var(--rule)"><span>${r.criterion}</span><span style="color:var(--muted)">${r.maxPoints} pts</span></div>`).join('')}
+    </div>`;
+  }
+  body+=`<div class="form-group">
+    <label class="field-label">Your Submission</label>
+    <textarea id="essay-text" rows="10" placeholder="Type or paste your work here..." style="width:100%;resize:vertical"></textarea>
+  </div>`;
+  document.getElementById('essay-modal-body').innerHTML=body;
+  document.getElementById('essay-modal-footer').innerHTML=`
+    <button class="btn btn-secondary" onclick="closeModal('modal-submit-essay')">Cancel</button>
+    <button class="btn btn-primary" onclick="submitEssay(${cwId})">Submit for Grading →</button>
+  `;
+  openModal('modal-submit-essay');
+}
+
+function submitEssay(cwId){
+  const text=document.getElementById('essay-text').value.trim();
+  if(text.length<50){showToast('Please write at least 50 characters','error');return}
+  closeModal('modal-submit-essay');
+  simulateAIGrading(cwId,text);
+}
+
+function simulateAIGrading(cwId,text){
+  const cw=DB.courseworks.find(c=>c.id===cwId);
+  const steps=[
+    {name:'Requirement Agent',desc:'Checking word count and structure...'},
+    {name:'Rubric Alignment Agent',desc:'Scoring each criterion with Gemini 1.5 Flash...'},
+    {name:'Synthesis Agent',desc:'Generating comprehensive feedback report...'},
+  ];
+  let stepIdx=0;
+  function renderPipeline(){
+    let body=`<div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem">AI agents are evaluating your submission against the rubric.</div>`;
+    body+=`<div class="agent-pipeline">`;
+    steps.forEach((s,i)=>{
+      const cls=i<stepIdx?'done':i===stepIdx?'running':'waiting';
+      const icon=i<stepIdx?'✓':i===stepIdx?'●':'○';
+      const statusText=i<stepIdx?'Complete':i===stepIdx?'Processing...':'Waiting';
+      body+=`<div class="agent-step ${cls}">
+        <div class="agent-step-icon">${icon}</div>
+        <div class="agent-step-info">
+          <div class="agent-step-name">${s.name}</div>
+          <div class="agent-step-status">${i===stepIdx?`<span class="typing-dots"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></span> ${s.desc}`:statusText}</div>
+        </div>
+      </div>`;
+    });
+    body+=`</div>`;
+    document.getElementById('ai-grading-body').innerHTML=body;
+  }
+  openModal('modal-ai-grading');
+  renderPipeline();
+  const interval=setInterval(()=>{
+    stepIdx++;
+    if(stepIdx>=steps.length){
+      clearInterval(interval);
+      // Generate AI scores
+      const rubric=cw.rubric||[];
+      const aiFeedback=rubric.map(r=>{
+        const maxPts=r.maxPoints;
+        const score=Math.floor(maxPts*0.65+Math.random()*maxPts*0.25);
+        const justifications=[
+          `Good coverage of ${r.criterion.toLowerCase()}. The argument is structured but could benefit from more specific examples.`,
+          `Strong analysis demonstrated. Key concepts are addressed effectively with relevant evidence.`,
+          `Adequate treatment of the topic. More depth in examples would strengthen the response significantly.`,
+          `Well-articulated points. The connection to real-world implications adds value to the response.`,
+        ];
+        return {criterion:r.criterion,score,maxPoints:maxPts,justification:justifications[Math.floor(Math.random()*justifications.length)]};
+      });
+      const totalScore=aiFeedback.reduce((a,f)=>a+f.score,0);
+      const maxScore=aiFeedback.reduce((a,f)=>a+f.maxPoints,0);
+      const sub={
+        id:DB.nextId.submission++,courseworkId:cwId,studentId:currentUser.id,
+        submittedAt:new Date().toISOString(),status:'PENDING_REVIEW',
+        score:maxScore>0?totalScore/maxScore:0,
+        submissionText:text,aiFeedback,finalScore:null,finalFeedback:null
+      };
+      DB.submissions.push(sub);
+      setTimeout(()=>{
+        closeModal('modal-ai-grading');
+        showToast(`Submitted! AI Score: ${Math.round(sub.score*100)}% · Awaiting teacher review`,'success');
+        navigateTo('coursework-detail',cwId);
+      },800);
+      return;
+    }
+    renderPipeline();
+  },1400);
+}
+
+// ════════════════════════════════════
+//  TEACHER: REVIEW SUBMISSION
+// ════════════════════════════════════
+function openReviewModal(subId){
+  const sub=DB.submissions.find(s=>s.id===subId);
+  if(!sub)return;
+  const student=DB.users.find(u=>u.id===sub.studentId);
+  const cw=DB.courseworks.find(c=>c.id===sub.courseworkId);
+
+  let body=`<div style="display:flex;gap:1rem;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap">
+    <div style="flex:1">
+      <div style="font-family:'Syne',sans-serif;font-weight:700">${student?.name}</div>
+      <div style="font-size:0.78rem;color:var(--muted)">${cw?.name}</div>
+    </div>
+    <div style="display:flex;gap:0.6rem;align-items:center">
+      <span>AI Score:</span>
+      <span class="badge ${sub.score>=0.7?'badge-green':'badge-orange'}" style="font-size:0.85rem">${Math.round(sub.score*100)}%</span>
+    </div>
+  </div>`;
+
+  if(sub.submissionText){
+    body+=`<div style="margin-bottom:1.2rem">
+      <div class="section-label" style="margin-bottom:0.4rem">Student Submission</div>
+      <div style="padding:0.8rem;background:var(--paper);border-radius:6px;font-size:0.8rem;line-height:1.7;max-height:150px;overflow-y:auto">${sub.submissionText}</div>
+    </div>`;
+  }
+
+  if(sub.aiFeedback){
+    body+=`<div class="section-label" style="margin-bottom:0.5rem">AI Rubric Breakdown</div>
+    <table class="feedback-table" style="margin-bottom:1.2rem"><thead><tr><th>Criterion</th><th>Score</th><th>Justification</th></tr></thead><tbody>`;
+    sub.aiFeedback.forEach(f=>{
+      body+=`<tr><td><strong>${f.criterion}</strong></td><td><span class="score-chip">${f.score}/${f.maxPoints}</span></td><td style="color:var(--muted);font-size:0.78rem">${f.justification}</td></tr>`;
+    });
+    body+=`</tbody></table>`;
+  }
+
+  if(cw?.type==='quiz'&&sub.answers){
+    body+=`<div class="section-label" style="margin-bottom:0.5rem">Quiz Answers</div>`;
+    sub.answers.forEach(a=>{
+      const q=cw.questions?.find(q=>q.id===a.questionId);
+      if(!q)return;
+      const chosen=q.options.find(o=>o.id===a.selectedOptionId);
+      const right=chosen?.correct;
+      body+=`<div style="padding:0.5rem 0.7rem;margin-bottom:0.4rem;background:${right?'rgba(46,125,50,0.06)':'rgba(200,64,30,0.06)'};border-radius:4px;font-size:0.8rem">
+        ${right?'✓':'✗'} ${q.text} → <strong>${chosen?.text}</strong>
+      </div>`;
+    });
+  }
+
+  body+=`<div class="divider"></div>
+  <div class="form-group">
+    <label class="field-label">Your Feedback (optional)</label>
+    <textarea id="teacher-feedback" rows="3" placeholder="Add personal notes or feedback for the student..." style="width:100%">${sub.finalFeedback||''}</textarea>
+  </div>`;
+
+  document.getElementById('modal-review-body').innerHTML=body;
+  document.getElementById('modal-review-footer').innerHTML=`
+    <button class="btn btn-secondary" onclick="closeModal('modal-review-submission')">Close</button>
+    <button class="btn btn-primary" onclick="approveSubmission(${subId})">✓ Approve & Release</button>
+  `;
+  openModal('modal-review-submission');
+}
+
+function approveSubmission(subId){
+  const sub=DB.submissions.find(s=>s.id===subId);
+  if(!sub)return;
+  sub.finalFeedback=document.getElementById('teacher-feedback').value.trim()||'Good work! The AI evaluation above reflects your performance against the rubric.';
+  sub.finalScore=sub.score;
+  sub.status='GRADED';
+  closeModal('modal-review-submission');
+  showToast('Submission approved & feedback released to student','success');
+  renderDashboard();
+}
+
+// ════════════════════════════════════
+//  SUBMISSIONS PAGE (teacher)
+// ════════════════════════════════════
+function renderSubmissions(){
+  const myClassrooms=DB.classrooms.filter(c=>c.teacherId===currentUser.id);
+  const allSubs=DB.submissions.filter(s=>myClassrooms.some(c=>DB.courseworks.find(cw=>cw.id===s.courseworkId&&cw.classroomId===c.id)));
+
+  let html='';
+  const byStatus={PENDING_REVIEW:[],GRADED:[],SUBMITTED:[],GRADING:[]};
+  allSubs.forEach(s=>{ if(byStatus[s.status])byStatus[s.status].push(s); else byStatus['SUBMITTED'].push(s); });
+
+  ['PENDING_REVIEW','GRADED','SUBMITTED'].forEach(status=>{
+    const subs=byStatus[status];
+    if(subs.length===0)return;
+    html+=`<div class="section-header" style="margin-top:1.5rem"><div class="section-label">${status.replace('_',' ')} (${subs.length})</div></div>`;
+    html+=`<table class="data-table"><thead><tr><th>Student</th><th>Coursework</th><th>Type</th><th>Score</th><th>Submitted</th><th>Action</th></tr></thead><tbody>`;
+    subs.forEach(s=>{
+      const student=DB.users.find(u=>u.id===s.studentId);
+      const cw=DB.courseworks.find(c=>c.id===s.courseworkId);
+      html+=`<tr>
+        <td><strong>${student?.name}</strong></td>
+        <td>${cw?.name}</td>
+        <td>${cw?`<span class="pill pill-${cw.type}">${cw.type}</span>`:''}</td>
+        <td><span class="badge ${s.score>=0.7?'badge-green':'badge-orange'}">${Math.round(s.score*100)}%</span></td>
+        <td style="color:var(--muted);font-size:0.78rem">${new Date(s.submittedAt).toLocaleDateString()}</td>
+        <td><button class="btn ${status==='PENDING_REVIEW'?'btn-primary':'btn-secondary'} btn-sm" onclick="openReviewModal(${s.id})">${status==='PENDING_REVIEW'?'Review →':'View'}</button></td>
+      </tr>`;
+    });
+    html+=`</tbody></table>`;
+  });
+  if(!html) html=`<div class="empty-state"><span class="empty-state-icon">📭</span>No submissions yet.</div>`;
+  document.getElementById('submissions-content').innerHTML=html;
+}
+
+// ════════════════════════════════════
+//  STUDENTS PAGE (teacher)
+// ════════════════════════════════════
+function renderStudents(){
+  const myClassrooms=DB.classrooms.filter(c=>c.teacherId===currentUser.id);
+  let html='';
+  myClassrooms.forEach(room=>{
+    const students=DB.users.filter(u=>room.studentIds.includes(u.id));
+    html+=`<div class="section-header" style="margin-top:1.5rem">
+      <div class="section-label">${room.name} (${students.length})</div>
+      <span class="invite-code" style="font-size:0.75rem;padding:0.25rem 0.8rem">${room.inviteCode}</span>
+    </div>`;
+    if(students.length===0){
+      html+=`<div class="empty-state" style="padding:1.5rem"><span>No students enrolled. Share code: <strong>${room.inviteCode}</strong></span></div>`;
+    } else {
+      html+=`<table class="data-table"><thead><tr><th>Name</th><th>Enroll #</th><th>Email</th><th>Submissions</th><th>Avg Score</th></tr></thead><tbody>`;
+      students.forEach(s=>{
+        const subs=DB.submissions.filter(sub=>sub.studentId===s.id&&DB.courseworks.find(c=>c.id===sub.courseworkId&&c.classroomId===room.id));
+        const graded=subs.filter(sub=>sub.score!=null);
+        const avg=graded.length?Math.round(graded.reduce((a,sub)=>a+sub.score,0)/graded.length*100):'-';
+        html+=`<tr>
+          <td><strong>${s.name}</strong></td>
+          <td style="font-family:'Syne',sans-serif;font-weight:700;color:var(--muted)">${s.enrollmentNumber}</td>
+          <td style="color:var(--muted)">${s.email}</td>
+          <td><span class="badge badge-gray">${subs.length}</span></td>
+          <td><span class="badge ${typeof avg==='number'&&avg>=70?'badge-green':'badge-orange'}">${typeof avg==='number'?avg+'%':avg}</span></td>
+        </tr>`;
+      });
+      html+=`</tbody></table>`;
+    }
+  });
+  document.getElementById('students-content').innerHTML=html||`<div class="empty-state"><span class="empty-state-icon">👥</span>Create a classroom first.</div>`;
+}
+
+// ════════════════════════════════════
+//  MY GRADES (student)
+// ════════════════════════════════════
+function renderGrades(){
+  const mySubs=DB.submissions.filter(s=>s.studentId===currentUser.id);
+  let html='';
+  if(mySubs.length===0){
+    html=`<div class="empty-state"><span class="empty-state-icon">📊</span>No submissions yet.</div>`;
+  } else {
+    html+=`<table class="data-table"><thead><tr><th>Coursework</th><th>Type</th><th>Submitted</th><th>Score</th><th>Status</th><th>Action</th></tr></thead><tbody>`;
+    mySubs.forEach(s=>{
+      const cw=DB.courseworks.find(c=>c.id===s.courseworkId);
+      html+=`<tr>
+        <td><strong>${cw?.name||'—'}</strong></td>
+        <td>${cw?`<span class="pill pill-${cw.type}">${cw.type}</span>`:''}</td>
+        <td style="color:var(--muted);font-size:0.78rem">${new Date(s.submittedAt).toLocaleDateString()}</td>
+        <td><span class="badge ${s.score>=0.7?'badge-green':'badge-orange'}">${Math.round(s.score*100)}%</span></td>
+        <td>${statusBadge(s.status)}</td>
+        <td><button class="btn btn-secondary btn-sm" onclick="navigateTo('coursework-detail',${cw?.id})">View →</button></td>
+      </tr>`;
+    });
+    html+=`</tbody></table>`;
+  }
+  document.getElementById('grades-content').innerHTML=html;
+}
+
+// ════════════════════════════════════
+//  UTILITIES
+// ════════════════════════════════════
+function openModal(id){ document.getElementById(id).classList.add('show') }
+function closeModal(id){ document.getElementById(id).classList.remove('show') }
+
+function showToast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast show '+(type||'');
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+// close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay=>{
+  overlay.addEventListener('click',e=>{ if(e.target===overlay&&overlay.id!=='modal-ai-grading') closeModal(overlay.id) });
+});
+
+// init enroll field
+toggleEnrollField();
+</script>
+</body>
+</html>
