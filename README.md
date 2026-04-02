@@ -4,9 +4,7 @@
 
 ---
 
-## Hey, welcome! 👋
-
-This is my capstone project — an AI-powered Learning Management System that I built milestone by milestone. The core idea is simple: grading subjective work is exhausting and time-consuming for teachers, and generic feedback doesn't really help students grow. A-LMS tries to fix both of those problems using a pipeline of AI agents that evaluate student submissions against a rubric, generate detailed feedback, and then let the teacher review everything before the student ever sees it.
+ an AI-powered Learning Management System that I built milestone by milestone. The core idea is simple: grading subjective work is exhausting and time-consuming for teachers, and generic feedback doesn't really help students grow. A-LMS tries to fix both of those problems using a pipeline of AI agents that evaluate student submissions against a rubric, generate detailed feedback, and then let the teacher review everything before the student ever sees it.
 
 Think of it as AI doing the heavy lifting, with teachers keeping full control.
 
@@ -185,16 +183,3 @@ The whole "Human-in-the-Loop" (HoTL) pattern is baked into the submission status
 
 ---
 
-## Contributing
-
-This is a capstone project so I'm not actively accepting PRs right now, but if you spot something broken or have a suggestion, feel free to open an issue. I read them.
-
----
-
-## License
-
-MIT — use it, remix it, build on it. Just don't submit it as your own capstone. 😄
-
----
-
-*Built with too much coffee and genuine curiosity about whether AI can actually make feedback better, not just faster.*
